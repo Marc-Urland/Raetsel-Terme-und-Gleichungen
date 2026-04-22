@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Das Kerzenrätsel — Problemlösen mit Gleichungen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Crimson+Text:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: #faf7f2;
+    font-family: 'Crimson Text', Georgia, serif;
+    color: #1a1a1a;
+    min-height: 100vh;
+  }
+  .container { max-width: 1152px; margin: 0 auto; padding: 2rem 1.5rem; }
+  button { cursor: pointer; font-family: inherit; border: none; background: none; }
+
+  @keyframes sanft { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes einblenden { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes aufploppen { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @keyframes tipp-rein { from { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; } to { opacity: 1; max-height: 200px; } }
+  .hereingleiten { animation: sanft 0.5s ease-out both; }
+  .einblenden { animation: einblenden 0.4s ease-out both; }
+  .aufploppen { animation: aufploppen 0.6s ease-out both; }
+  .tipp-rein { animation: tipp-rein 0.4s ease-out both; }
+
+  /* Kopfzeile */
+  header.seiten-kopf {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    flex-wrap: wrap; gap: 1rem; margin-bottom: 2.5rem;
+  }
+  .kopf-meta {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+    letter-spacing: 0.2em; color: #8a8a8a; margin-bottom: 0.5rem;
+  }
+  h1.haupt {
+    font-family: 'Fraunces', serif; font-weight: 900;
+    font-size: clamp(2.2rem, 5vw, 3.8rem); line-height: 0.95;
+    margin-bottom: 0.4rem;
+  }
+
+  .btn-umriss {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    border: 2px solid #1a1a1a; background: transparent; color: #1a1a1a;
+    padding: 0.5rem 1rem; border-radius: 999px;
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 0.9rem;
+    transition: background 0.2s;
+  }
+  .btn-umriss:hover { background: #1a1a1a; color: #faf7f2; }
+  .btn-umriss.aktiv { background: #1a1a1a; color: #faf7f2; }
+
+  /* Leiträtsel */
+  .badge-oben {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.25rem 0.75rem; border-radius: 999px;
+    background: #d4a017; color: white;
+    margin-bottom: 1rem;
+  }
+  .badge-oben-text {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.15em; font-weight: 600;
+  }
+  .raetsel-box {
+    background: white; border-left: 8px solid #d4a017;
+    padding: 2.5rem; border-radius: 0.5rem;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.04);
+  }
+  h2.raetsel-titel {
+    font-family: 'Fraunces', serif; font-weight: 900;
+    font-size: clamp(2rem, 3.5vw, 2.75rem);
+    line-height: 1.1; margin-bottom: 0.25rem;
+  }
+  .raetsel-herkunft {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.1em; color: #8a8a8a;
+    text-transform: uppercase; margin-bottom: 2rem;
+  }
+  .raetsel-text {
+    font-size: 1.25rem; line-height: 1.6; color: #2a2a2a;
+    margin-bottom: 1.75rem;
+  }
+  .raetsel-frage {
+    font-size: 1.4rem; line-height: 1.4; font-weight: 700;
+    font-family: 'Fraunces', serif; font-style: italic;
+    color: #d4a017; margin-bottom: 2rem;
+  }
+  .leitfrage-block {
+    padding-top: 1.5rem; border-top: 2px dashed #e0d8c8;
+    margin-bottom: 1.5rem;
+  }
+  .leitfrage-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.2em; color: #8a8a8a; margin-bottom: 0.5rem;
+  }
+  .leitfrage-text {
+    font-family: 'Fraunces', serif; font-size: 1.5rem;
+    font-weight: 700; font-style: italic; line-height: 1.3;
+  }
+
+  /* Hilfen-Bereich */
+  .hilfen-bereich {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #f0e8d8;
+  }
+  .hilfen-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.2em; color: #8a8a8a;
+    margin-bottom: 0.75rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .hilfen-buttons {
+    display: flex; gap: 0.5rem; flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+  }
+  .btn-hilfe {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: #fef9ec; color: #5a4a1a;
+    border: 1.5px solid #e8d99a;
+    padding: 0.4rem 0.85rem; border-radius: 999px;
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .btn-hilfe:hover { background: #f9efd0; }
+  .btn-hilfe.aktiv {
+    background: #d4a017; color: white; border-color: #d4a017;
+  }
+  .btn-hilfe-nummer {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.25rem; height: 1.25rem; border-radius: 50%;
+    background: rgba(0,0,0,0.08); font-size: 0.7rem; font-weight: 700;
+  }
+  .btn-hilfe.aktiv .btn-hilfe-nummer {
+    background: rgba(255,255,255,0.25); color: white;
+  }
+  .tipp-karte {
+    background: #fef9ec; border-left: 4px solid #d4a017;
+    padding: 1rem 1.25rem; border-radius: 0.4rem;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+  }
+  .tipp-nummer {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.15em; color: #8a7424; font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  .tipp-text {
+    font-size: 1rem; line-height: 1.5; color: #2a2a2a;
+  }
+  .tipp-text em { font-style: italic; color: #5a4a1a; }
+
+  /* Sprinter-Bereich */
+  .sprinter-header {
+    display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;
+  }
+  .sprinter-linie { height: 4px; flex: 1; border-radius: 2px; }
+  .sprinter-linie-l { background: linear-gradient(to right, #1a1a1a, #c9a76b); }
+  .sprinter-linie-r { background: linear-gradient(to left, #1a1a1a, #c9a76b); }
+  .sprinter-badge {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.5rem 1rem; border-radius: 999px;
+    background: #1a1a1a; color: #c9a76b;
+  }
+  .sprinter-badge h2 {
+    font-family: 'Fraunces', serif; font-size: 1.5rem; font-weight: 700;
+  }
+  .sprinter-einleitung {
+    font-size: 1rem; color: #5a5a5a; text-align: center;
+    margin-bottom: 1.5rem; font-style: italic;
+  }
+  .sprinter-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+  }
+  .sprinter-karte {
+    background: white; padding: 1.5rem; border-radius: 0.5rem;
+    text-align: left; width: 100%;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    transition: all 0.22s ease-out;
+  }
+  .sprinter-karte:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  }
+  .sprinter-karte-kopf {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; margin-bottom: 0.75rem;
+  }
+  .sprinter-icon-kreis {
+    width: 3rem; height: 3rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+  }
+  .sprinter-nummer {
+    font-family: 'Fraunces', serif; font-weight: 900;
+    font-size: 2.5rem; line-height: 1;
+  }
+  .sprinter-titel {
+    font-family: 'Fraunces', serif; font-size: 1.3rem; font-weight: 700;
+    line-height: 1.1; margin-bottom: 0.2rem;
+  }
+  .sprinter-herkunft {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.65rem;
+    letter-spacing: 0.1em; color: #8a8a8a;
+    text-transform: uppercase; margin-bottom: 0.75rem;
+  }
+  .sprinter-vorschau {
+    font-size: 0.88rem; color: #5a5a5a; line-height: 1.5;
+  }
+  .sprinter-oeffnen {
+    margin-top: 0.75rem; font-family: 'Fraunces', serif;
+    font-style: italic; font-weight: 600; font-size: 0.95rem;
+  }
+
+  /* Detailansicht */
+  .detail-kopf {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 2rem;
+  }
+  .sprinter-detail-badge {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.375rem 0.75rem; border-radius: 999px;
+    background: #1a1a1a; color: #c9a76b;
+  }
+  .sprinter-detail-badge-text {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.15em; font-weight: 600;
+  }
+  .detail-zurueck {
+    background: #1a1a1a; color: #faf7f2;
+    padding: 1.5rem; border-radius: 0.5rem; margin-top: 1rem;
+  }
+  .detail-auftrag-label {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.15em; color: #c9a76b; margin-bottom: 0.75rem;
+  }
+  .detail-auftrag-text {
+    font-size: 1.05rem; line-height: 1.6;
+  }
+
+  /* Fußzeile */
+  .fuss {
+    margin-top: 3rem; padding-top: 1.5rem;
+    border-top: 1px solid #e0e0e0;
+  }
+  .fuss-text {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+    letter-spacing: 0.15em; color: #8a8a8a; text-align: center;
+  }
+
+  .icon {
+    display: inline-block; vertical-align: -0.125em;
+    fill: none; stroke-linecap: round; stroke-linejoin: round;
+  }
+</style>
+</head>
+<body>
+
+<!-- SVG-Symbol-Definitionen -->
+<svg style="position: absolute; width: 0; height: 0; overflow: hidden;" aria-hidden="true">
+  <defs>
+    <symbol id="icon-flame" viewBox="0 0 24 24">
+      <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+    </symbol>
+    <symbol id="icon-bike" viewBox="0 0 24 24">
+      <circle cx="18.5" cy="17.5" r="3.5"/>
+      <circle cx="5.5" cy="17.5" r="3.5"/>
+      <circle cx="15" cy="5" r="1"/>
+      <path d="M12 17.5V14l-3-3 4-3 2 3h2"/>
+    </symbol>
+    <symbol id="icon-users" viewBox="0 0 24 24">
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </symbol>
+    <symbol id="icon-sparkles" viewBox="0 0 24 24">
+      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>
+      <path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/>
+    </symbol>
+    <symbol id="icon-zap" viewBox="0 0 24 24">
+      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+    </symbol>
+    <symbol id="icon-eye-off" viewBox="0 0 24 24">
+      <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+      <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+      <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
+      <line x1="2" y1="2" x2="22" y2="22"/>
+    </symbol>
+    <symbol id="icon-arrow-left" viewBox="0 0 24 24">
+      <line x1="19" y1="12" x2="5" y2="12"/>
+      <polyline points="12 19 5 12 12 5"/>
+    </symbol>
+    <symbol id="icon-bulb" viewBox="0 0 24 24">
+      <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/>
+      <path d="M9 18h6"/>
+      <path d="M10 22h4"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div id="app" class="container"></div>
+
+<script>
+// ==================== DATEN ====================
+const LEITRAETSEL = {
+  id: "kerze",
+  titel: "Die Kerzenwette",
+  herkunft: "Alltagsphysik",
+  icon: "icon-flame",
+  accent: "#d4a017",
+  text: "Eine 24 cm lange Kerze wird pro Stunde Brenndauer 1 cm kürzer. Eine 15 cm lange Kerze brennt pro Stunde 0,4 cm ab. Beide Kerzen werden zum gleichen Zeitpunkt angezündet.",
+  frage: "Wann sind beide Kerzen gleich hoch — und wie hoch sind sie dann?",
+  leitfrage: "Welche Schritte müsst ihr machen, um diese Frage zu beantworten?",
+  tipps: [
+    "Fertigt eine Skizze der beiden Kerzen nach 1, 2 und 3 Stunden an. Was verändert sich jeweils?",
+    "Versucht, für jede Kerze einen Term aufzuschreiben, der die Höhe nach <em>t</em> Stunden angibt. (Vergleiche: Lambacher Schweizer S. 148, Beispiel Tabea & Vater.)",
+    "Wenn beide Kerzen gleich hoch sind, müssen die beiden Terme gleich sein. Welche Gleichung ergibt sich daraus?"
+  ]
+};
+
+const SPRINTER_RAETSEL = [
+  {
+    id: "fahrrad",
+    letter: "2",
+    titel: "Hannahs Fahrradpanne",
+    herkunft: "Alltagsproblem — nach Lambacher Schweizer 7, S. 153",
+    icon: "icon-bike",
+    accent: "#2d7a7a",
+    text: "Hannah hat auf dem Heimweg eine Fahrradpanne und müsste ihr Rad 12 km nach Hause schieben. Sie ruft ihren Vater an, der ihr sofort mit dem Auto entgegenfährt. Der Vater fährt mit 1300 Metern pro Minute, Hannah schiebt ihr Rad mit 85 Metern pro Minute.",
+    frage: "Wie lange dauert es, bis sich die beiden treffen?",
+    tipps: [
+      "Fertigt eine Skizze an. Wo starten Hannah und ihr Vater? Wer bewegt sich in welche Richtung?",
+      "Nach <em>t</em> Minuten — wie weit ist Hannah gegangen? Wie weit ist der Vater gefahren? Schreibt zwei Terme auf.",
+      "Wenn sie sich treffen, haben beide zusammen 12 km zurückgelegt. Welche Gleichung folgt daraus? (Achtung: 12 km in Meter umrechnen!)"
+    ]
+  },
+  {
+    id: "schwestern",
+    letter: "3",
+    titel: "Zwei Schwestern",
+    herkunft: "Altersrätsel — Klassiker der Schulmathematik",
+    icon: "icon-users",
+    accent: "#5a4b8a",
+    text: "Anna ist dreimal so alt wie ihre kleine Schwester Mia. In 8 Jahren wird Anna nur noch doppelt so alt sein wie Mia.",
+    frage: "Wie alt sind die beiden Schwestern heute?",
+    tipps: [
+      "Nennt Mias Alter heute <em>x</em>. Wie alt ist Anna dann? (Vergleiche: Lambacher Schweizer S. 149, Beispiel Noah & Vater.)",
+      "Wie alt sind die beiden in 8 Jahren? Schreibt die Terme für Mia und für Anna auf.",
+      "„Anna ist doppelt so alt wie Mia“ bedeutet: Annas Alter = 2 · Mias Alter. Welche Gleichung ergibt das für die Situation in 8 Jahren?"
+    ]
+  },
+  {
+    id: "lotus",
+    letter: "4",
+    titel: "Lotusblüten",
+    herkunft: "Indien, um 1150 — aus dem Buch „Lilavati“ von Bhaskara II",
+    icon: "icon-sparkles",
+    accent: "#c9622e",
+    text: "Aus einem Bündel Lotusblüten gibt ein Mönch ein Drittel, ein Fünftel und ein Sechstel der Blüten an die Götter. Ein Viertel der Blüten gibt er einer Besucherin. Die restlichen sechs Blüten behält er selbst.",
+    frage: "Wie viele Blüten hatte das Bündel am Anfang?",
+    tipps: [
+      "Nennt die gesuchte Blütenzahl <em>x</em>. Was ist <sup>1</sup>⁄<sub>3</sub> von <em>x</em>, <sup>1</sup>⁄<sub>5</sub> von <em>x</em>, <sup>1</sup>⁄<sub>6</sub> von <em>x</em> und <sup>1</sup>⁄<sub>4</sub> von <em>x</em>?",
+      "Alle verteilten Anteile zusammen plus die 6 übrigen Blüten müssen wieder <em>x</em> ergeben. Könnt ihr das als Gleichung schreiben?",
+      "Löst die Brüche durch Multiplikation mit dem Hauptnenner auf. Welche Zahl ist Hauptnenner von 3, 5, 6 und 4?"
+    ]
+  }
+];
+
+// ==================== ZUSTAND ====================
+let zustand = {
+  ansicht: "start",
+  aktivesRaetsel: null,
+  sprinterSichtbar: false,
+  // Welche Tipps sind aktuell aufgeklappt? Schlüssel: "raetselId-tippIndex"
+  tippsAuf: {}
+};
+
+// ==================== HILFSFUNKTIONEN ====================
+function escape(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+function icon(id, groesse = 20, farbe = "currentColor") {
+  return `<svg class="icon" width="${groesse}" height="${groesse}" style="stroke: ${farbe}; stroke-width: 2; fill: none;"><use href="#${id}"/></svg>`;
+}
+
+// ==================== AKTIONEN ====================
+function sprinterUmschalten() {
+  zustand.sprinterSichtbar = !zustand.sprinterSichtbar;
+  darstellen();
+}
+
+function oeffneSprinter(id) {
+  zustand.aktivesRaetsel = SPRINTER_RAETSEL.find(r => r.id === id);
+  zustand.ansicht = "sprinter";
+  darstellen();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function zurueckZurStart() {
+  zustand.ansicht = "start";
+  zustand.aktivesRaetsel = null;
+  darstellen();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function tippUmschalten(raetselId, tippIndex) {
+  const schluessel = raetselId + "-" + tippIndex;
+  zustand.tippsAuf[schluessel] = !zustand.tippsAuf[schluessel];
+  darstellen();
+}
+
+// ==================== HILFEN-BAUSTEIN ====================
+function baueHilfen(raetsel) {
+  if (!raetsel.tipps || raetsel.tipps.length === 0) return "";
+
+  const buttons = raetsel.tipps.map((_, i) => {
+    const schluessel = raetsel.id + "-" + i;
+    const aktiv = zustand.tippsAuf[schluessel];
+    return `
+      <button class="btn-hilfe ${aktiv ? "aktiv" : ""}" onclick="tippUmschalten('${raetsel.id}', ${i})">
+        <span class="btn-hilfe-nummer">${i + 1}</span>
+        ${aktiv ? "Tipp ausblenden" : "Tipp " + (i + 1)}
+      </button>
+    `;
+  }).join("");
+
+  const tippKarten = raetsel.tipps.map((tipp, i) => {
+    const schluessel = raetsel.id + "-" + i;
+    if (!zustand.tippsAuf[schluessel]) return "";
+    return `
+      <div class="tipp-karte tipp-rein">
+        <div class="tipp-nummer">TIPP ${i + 1}</div>
+        <div class="tipp-text">${tipp}</div>
+      </div>
+    `;
+  }).join("");
+
+  return `
+    <div class="hilfen-bereich">
+      <div class="hilfen-label">
+        ${icon("icon-bulb", 14, "#8a8a8a")}
+        <span>BRAUCHT IHR EINE HILFE? — TIPPS AUFKLAPPEN</span>
+      </div>
+      <div class="hilfen-buttons">${buttons}</div>
+      <div>${tippKarten}</div>
+    </div>
+  `;
+}
+
+// ==================== DARSTELLUNG: DETAILANSICHT ====================
+function darstelleDetail() {
+  const r = zustand.aktivesRaetsel;
+  return `
+    <div class="detail-kopf">
+      <button class="btn-umriss" onclick="zurueckZurStart()">
+        ${icon("icon-arrow-left", 16)} zurück
+      </button>
+      <div class="sprinter-detail-badge">
+        ${icon("icon-zap", 14)}
+        <span class="sprinter-detail-badge-text">SPRINTER-AUFGABE ${escape(r.letter)}</span>
+      </div>
+    </div>
+
+    <div class="einblenden">
+      <div class="badge-oben" style="background: ${r.accent}">
+        ${icon(r.icon, 18, "white")}
+        <span class="badge-oben-text">RÄTSEL ${escape(r.letter)}</span>
+      </div>
+
+      <h1 class="haupt" style="font-size: clamp(2rem, 4.5vw, 3.5rem); line-height: 1; margin-bottom: 0.5rem;">
+        ${escape(r.titel)}
+      </h1>
+      <p class="raetsel-herkunft" style="font-size: 0.75rem; margin-bottom: 2rem;">
+        ${escape(r.herkunft)}
+      </p>
+
+      <div class="raetsel-box" style="border-left-color: ${r.accent}; padding: 2rem; margin-bottom: 1.5rem;">
+        <p class="raetsel-text" style="font-size: 1.2rem; margin-bottom: 1.5rem;">${escape(r.text)}</p>
+        <p class="raetsel-frage" style="color: ${r.accent}; font-size: 1.3rem; margin-bottom: 0;">
+          ${escape(r.frage)}
+        </p>
+        ${baueHilfen(r)}
+      </div>
+
+      <div class="detail-zurueck">
+        <div class="detail-auftrag-label">EURE AUFGABE ALS SPRINTER</div>
+        <p class="detail-auftrag-text">
+          Probiert <strong>dieselben Strategien</strong>, die vorne an der Tafel gesammelt wurden, auch bei diesem Rätsel aus.
+          Welche Methode funktioniert hier gut, welche weniger gut? Haltet eure Beobachtungen im Heft fest.
+        </p>
+      </div>
+    </div>
+  `;
+}
+
+// ==================== DARSTELLUNG: STARTSEITE ====================
+function darstelleStart() {
+  const sprinterAktiv = zustand.sprinterSichtbar;
+
+  const sprinterKarten = SPRINTER_RAETSEL.map(r => `
+    <button class="sprinter-karte" onclick="oeffneSprinter('${r.id}')" style="border-top: 5px solid ${r.accent};">
+      <div class="sprinter-karte-kopf">
+        <div class="sprinter-icon-kreis" style="background: ${r.accent};">
+          ${icon(r.icon, 20, "white")}
+        </div>
+        <div class="sprinter-nummer" style="color: ${r.accent};">${escape(r.letter)}</div>
+      </div>
+      <h3 class="sprinter-titel">${escape(r.titel)}</h3>
+      <p class="sprinter-herkunft">${escape(r.herkunft)}</p>
+      <p class="sprinter-vorschau">${escape(r.text.slice(0, 90))}…</p>
+      <div class="sprinter-oeffnen" style="color: ${r.accent};">öffnen →</div>
+    </button>
+  `).join("");
+
+  const sprinterBlock = sprinterAktiv ? `
+    <div class="aufploppen" style="margin-bottom: 2rem;">
+      <div class="sprinter-header">
+        <div class="sprinter-linie sprinter-linie-l"></div>
+        <div class="sprinter-badge">
+          ${icon("icon-zap", 16)}
+          <h2>Sprinter-Aufgaben</h2>
+        </div>
+        <div class="sprinter-linie sprinter-linie-r"></div>
+      </div>
+      <p class="sprinter-einleitung">
+        Wer mit dem Kerzenrätsel fertig ist: Hier sind drei weitere Rätsel. Testet die Strategien von oben — welche funktioniert <em>bei jedem</em> zuverlässig?
+      </p>
+      <div class="sprinter-grid">${sprinterKarten}</div>
+    </div>
+  ` : "";
+
+  return `
+    <header class="seiten-kopf hereingleiten">
+      <div>
+        <div class="kopf-meta">MATHEMATIK · 7. KLASSE · PROBLEMLÖSEN MIT GLEICHUNGEN</div>
+        <h1 class="haupt">Das Kerzenrätsel</h1>
+      </div>
+      <button class="btn-umriss ${sprinterAktiv ? "aktiv" : ""}" onclick="sprinterUmschalten()">
+        ${sprinterAktiv ? icon("icon-eye-off", 16) : icon("icon-zap", 16)}
+        ${sprinterAktiv ? "Sprinter ausblenden" : "Sprinter-Aufgaben zeigen"}
+      </button>
+    </header>
+
+    <div class="hereingleiten" style="margin-bottom: 2.5rem;">
+      <div class="badge-oben">
+        ${icon("icon-flame", 14, "white")}
+        <span class="badge-oben-text">RÄTSEL</span>
+      </div>
+
+      <div class="raetsel-box">
+        <h2 class="raetsel-titel">${escape(LEITRAETSEL.titel)}</h2>
+        <p class="raetsel-herkunft">${escape(LEITRAETSEL.herkunft)}</p>
+        <p class="raetsel-text">${escape(LEITRAETSEL.text)}</p>
+        <p class="raetsel-frage">${escape(LEITRAETSEL.frage)}</p>
+
+        <div class="leitfrage-block">
+          <div class="leitfrage-label">FRAGE AN EUCH</div>
+          <p class="leitfrage-text">${escape(LEITRAETSEL.leitfrage)}</p>
+        </div>
+
+        ${baueHilfen(LEITRAETSEL)}
+      </div>
+    </div>
+
+    ${sprinterBlock}
+
+    <footer class="fuss">
+      <p class="fuss-text">7 · PROBLEMLÖSEN MIT GLEICHUNGEN · KAPITEL IV TERME UND GLEICHUNGEN</p>
+    </footer>
+  `;
+}
+
+// ==================== RENDERER ====================
+function darstellen() {
+  document.getElementById("app").innerHTML =
+    zustand.ansicht === "sprinter" ? darstelleDetail() : darstelleStart();
+}
+
+// ==================== START ====================
+darstellen();
+</script>
+</body>
+</html>
